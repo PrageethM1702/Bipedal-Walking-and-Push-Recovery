@@ -12,16 +12,16 @@ polygon) projected from world space into screen space.
 The frames are piped straight into ffmpeg (the copy bundled with
 imageio-ffmpeg, so nothing extra needs installing).
 
-Usage
------
-    python tools/record_demo.py                        # ~50 s, 1280x720, 30 fps
+Run from the project root:
+
+    python tools/record_demo.py                        # ~54 s, 1280x720, 30 fps
     python tools/record_demo.py --seconds 30
     python tools/record_demo.py --width 1080 --height 1080   # square, for feed
     python tools/record_demo.py --out demo.mp4
 
-Run it with an interpreter that has imageio-ffmpeg available, e.g.
-
-    C:\\Users\\panda\\.venv\\Scripts\\python.exe tools/record_demo.py
+Output defaults to ``logs/showcase.mp4`` inside the project. Requires Pillow and
+imageio-ffmpeg (both listed in requirements.txt); imageio-ffmpeg ships its own
+ffmpeg binary, so no system-wide install is needed.
 """
 import argparse
 import os
