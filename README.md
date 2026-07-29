@@ -1,13 +1,14 @@
 # Bipedal Walking and Push Recovery
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/PyBullet-3.2.7-orange" alt="PyBullet">
-  <img src="https://img.shields.io/badge/NumPy-SciPy-013243?logo=numpy&logoColor=white" alt="NumPy">
-  <img src="https://img.shields.io/badge/Matplotlib-plots-11557C" alt="Matplotlib">
-  <img src="https://img.shields.io/badge/tests-33%2F33%20passing-brightgreen" alt="Tests">
-  <img src="https://img.shields.io/badge/simulation-2000%20Hz-blue" alt="Rate">
-  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/PyBullet-3.2.7-FF6F00?logo=simulink&logoColor=white" alt="PyBullet">
+  <img src="https://img.shields.io/badge/NumPy-2.x-013243?logo=numpy&logoColor=white" alt="NumPy">
+  <img src="https://img.shields.io/badge/SciPy-1.x-8CAAE6?logo=scipy&logoColor=white" alt="SciPy">
+  <img src="https://img.shields.io/badge/Matplotlib-3.x-11557C?logo=python&logoColor=white" alt="Matplotlib">
+  <img src="https://img.shields.io/badge/Pillow-imaging-8A2BE2?logo=python&logoColor=white" alt="Pillow">
+  <img src="https://img.shields.io/badge/FFmpeg-recording-007808?logo=ffmpeg&logoColor=white" alt="FFmpeg">
+  <img src="https://img.shields.io/badge/PyYAML-config-CB171E?logo=yaml&logoColor=white" alt="PyYAML">
 </p>
 
 A 12-DoF bipedal robot that **walks** in PyBullet and **stays upright when you
