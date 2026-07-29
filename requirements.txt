@@ -4,3 +4,7 @@ numpy>=1.24              # math
 scipy>=1.10              # linear algebra (LIPM helpers)
 matplotlib>=3.7          # log plots
 PyYAML>=6.0              # config.yaml
+
+# Video recording (tools/record_demo.py)
+Pillow>=10.0             # frame compositing and captions
+imageio-ffmpeg>=0.4.9    # bundled ffmpeg binary, no system install needed
