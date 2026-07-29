@@ -1,0 +1,89 @@
+# ---------------------------------------------------------------------------
+# Configuration for the bipedal walking + push-recovery simulation.
+#
+# These values mirror the defaults baked into the modules; they document the
+# tuned operating point in one place.  All lengths used by the gait and the
+# inverse kinematics are in MILLIMETRES (the IK convention); world-frame
+# quantities in the balance layer are in metres.
+# ---------------------------------------------------------------------------
+
+simulation:
+  timestep: 0.0005          # 2000 Hz -- the gait is tuned at this rate
+  solver_iterations: 200
+  gravity: -9.8
+  spawn_height: 0.31        # m, drop height so the feet clear the plane
+  settle_time: 1.0          # s of quiet standing before a scenario starts
+
+robot:
+  urdf: robot/humanoid_leg_12dof.urdf
+  mass: 1.74                # kg (whole body)
+  leg_up_length: 110.0      # mm, hip pitch -> knee
+  leg_down_length: 110.0    # mm, knee -> ankle
+  foot_to_ground: 45.0      # mm, ankle -> sole
+  pelvic_interval: 70.5     # mm, hip-to-hip width
+  foot_half_length: 0.05    # m, +/- x of the sole from the ankle
+  foot_half_width: 0.026    # m, +/- y of the sole from the ankle
+
+motors:                     # PyBullet POSITION_CONTROL servo parameters
+  kp: 0.5
+  kd: 0.5
+  torque: 1.5               # N m
+  max_velocity: 5.0         # rad/s
+
+gait:                       # feed-forward walk pattern
+  body_move_point: 8        # samples in double support
+  leg_move_point: 8         # samples in single support
+  height: 50                # mm, swing foot lift
+  stride: 90                # mm, forward travel per step
+  sit: 50                   # mm, knee bend (CoM lowering)
+  sway_body: 30             # mm, lateral body sway -- critical for balance
+  sway_foot: 0              # mm, extra swing-foot spread
+  body_position_forward_plus: 5
+  sway_shift: 3             # samples the sway leads the swing by
+  lift_push: 0.5            # momentum gained when lifting the foot
+  land_pull: 0.7            # pull-back as the foot lands
+  time_step: 0.06           # s per gait keyframe
+  entry_time: 0.6           # s to ease from standing into the gait pose
+
+balance:
+  ankle_strategy:           # first line of defence: trunk-tilt PD -> ankles
+    kp_pitch: 1.1
+    kd_pitch: 0.04
+    kp_roll: 1.1
+    kd_roll: 0.04
+    max_offset: 0.45        # rad, clamp on the ankle correction
+  hip_strategy:             # second: flail the trunk against the fall
+    k_pitch: 0.25
+    k_roll: 0.25
+    max_offset: 0.5
+    relax: 0.9
+  recovery_step:            # third: step toward the capture point
+    step_gain: 1.4          # foot placement per unit capture-point offset
+    lift: 28.0              # mm, swing height of a protective step
+    min_step: 45.0          # mm
+    max_step: 190.0         # mm
+    max_back_step: 60.0     # mm (legs reach much less far backward)
+    step_duration: 0.12     # s per protective step
+
+state_machine:
+  step_margin: -0.005       # m, capture point outside the polygon by this ...
+  step_speed: 0.28          # m/s ... and this fast -> take a step
+  ankle_margin: 0.020       # m, capture point this close to the edge -> ankle
+  hip_speed: 0.45           # m/s -> engage the hip strategy
+  recovered_speed: 0.10     # m/s, below this the robot counts as settled
+  fallen_tilt: 1.0          # rad
+  fallen_height: 0.15       # m, CoM below this = collapsed
+  walk_disturb_tilt: 0.50   # rad, tilt that interrupts a walk
+  walk_disturb_speed: 1.30  # m/s, speed that interrupts a walk
+  arm_time: 0.8             # s, recovery disabled while settling at start-up
+  cooldown: 0.35            # s of forced STAND after a recovery step
+
+push:
+  duration: 0.02            # s the disturbance force is held (an impulse)
+  link: -1                  # -1 = trunk / base
+
+logging:
+  decimate: 10              # log every Nth tick to keep the CSV manageable
+  foot_rest_z: 0.030        # m, foot link height when the sole is planted
+  lift_clear: 0.045         # m, above this the foot counts as airborne
+  min_step_gap: 0.10        # s, debounce between counted touch-downs

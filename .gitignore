@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
+.env
+logs/_render.log
+logs/*.mp4
+assets/floor_grid.png
+
+# Legacy assets from the original scaffold, superseded by the 12-DoF model.
+robot/GankenKun/
+robot/humanoid.urdf

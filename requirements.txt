@@ -1,0 +1,6 @@
+# Bipedal walking + push recovery -- runtime dependencies
+pybullet>=3.2.5          # physics simulation
+numpy>=1.24              # math
+scipy>=1.10              # linear algebra (LIPM helpers)
+matplotlib>=3.7          # log plots
+PyYAML>=6.0              # config.yaml
