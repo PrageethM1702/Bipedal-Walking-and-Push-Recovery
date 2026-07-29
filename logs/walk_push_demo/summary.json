@@ -1,0 +1,19 @@
+{
+  "run": "walk_push_demo",
+  "duration_s": 14.0,
+  "ticks": 28000,
+  "final_com": [
+    1.2007072861015502,
+    -0.03377291137185809,
+    0.23238192181526907
+  ],
+  "fell": false,
+  "n_pushes": 4,
+  "n_planned_steps": 14,
+  "n_actual_steps": 14,
+  "states_visited": [
+    "WALK"
+  ],
+  "scenario": "walk_push",
+  "walked_x": 1.2087
+}
