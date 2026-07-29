@@ -4,10 +4,12 @@ tools/record_demo.py
 Renders the showcase to an MP4 -- no window chrome, no cursor, no dropped
 frames, unlike a screen capture.
 
-Each frame is rendered offscreen with ``getCameraImage`` and then composited
-with a proper HUD drawn in Pillow: phase caption, controller-state badge, live
-metrics, a push flash, and 3-D markers (centre of mass, capture point, support
-polygon) projected from world space into screen space.
+Each frame is rendered offscreen with ``getCameraImage`` and then composited in
+Pillow. By default the overlay is deliberately sparse: a phase caption plus
+CFD-style pathlines that trail the trunk, hips, knees and feet, so the motion of
+the gait is legible in a single frame. ``--hud`` adds the full instrumentation
+(controller-state badge, live metrics, and centre-of-mass / capture-point /
+support-polygon markers projected from world space into screen space).
 
 The frames are piped straight into ffmpeg (the copy bundled with
 imageio-ffmpeg, so nothing extra needs installing).
@@ -61,6 +63,68 @@ STATE_COL = {
     "STEP_RECOVER":  (255, 90, 80),
     "FALLEN":        (150, 150, 150),
 }
+
+
+TRAIL_LINKS = [
+    (-1, (150, 200, 255)),
+    (3,  (120, 235, 210)),
+    (19, (120, 235, 210)),
+    (4,  (190, 160, 255)),
+    (20, (190, 160, 255)),
+    (8,  (255, 150, 70)),
+    (24, (90, 190, 255)),
+]
+TRAIL_LEN = 170
+
+
+class Trails:
+    """Pathlines: a rolling history of each tracked point, drawn as a ribbon
+    that fades and thins toward the tail -- the same read as streaklines in a
+    CFD plot, so the motion of the gait is visible in a single frame."""
+
+    def __init__(self, robot_id, length=TRAIL_LEN):
+        self.rid = robot_id
+        self.length = length
+        self.buf = {idx: [] for idx, _ in TRAIL_LINKS}
+
+    def clear(self):
+        for k in self.buf:
+            self.buf[k] = []
+
+    def sample(self):
+        for idx, _ in TRAIL_LINKS:
+            if idx < 0:
+                pos = p.getBasePositionAndOrientation(self.rid)[0]
+            else:
+                pos = p.getLinkState(self.rid, idx)[0]
+            b = self.buf[idx]
+            b.append((pos[0], pos[1], pos[2]))
+            if len(b) > self.length:
+                del b[0]
+
+    def draw(self, d, view, proj, w, h, scale=1.0):
+        """Two passes per segment: a wide, faint glow under a bright core, so
+        the ribbon reads clearly against the dark floor without washing the
+        robot out."""
+        for idx, colour in TRAIL_LINKS:
+            pts = self.buf[idx]
+            if len(pts) < 2:
+                continue
+            pix, ok = project(np.array(pts), view, proj, w, h)
+            n = len(pts)
+            for i in range(n - 1):
+                if not (ok[i] and ok[i + 1]):
+                    continue
+                t = (i + 1) / n
+                seg = [tuple(pix[i]), tuple(pix[i + 1])]
+                glow = int(70 * (t ** 1.15))
+                if glow > 4:
+                    d.line(seg, fill=colour + (glow,),
+                           width=max(2, int(round((2.0 + 9.0 * t) * scale))))
+                core = int(255 * (t ** 1.35))
+                if core > 6:
+                    d.line(seg, fill=colour + (core,),
+                           width=max(1, int(round((0.8 + 3.2 * t) * scale))))
 
 
 def _font(size, bold=False):
@@ -165,7 +229,7 @@ class Recorder:
 
 
 def draw_hud(frame, sense, phase, t, total, walking, push, view, proj,
-             robot, w, h, minimal=True):
+             robot, w, h, minimal=True, trails=None):
     """Composite the caption (and, unless ``minimal``, the full HUD) onto a
     frame.  Minimal mode is the default: just the phase title and one line of
     description, so the robot itself is the focus."""
@@ -178,6 +242,8 @@ def draw_hud(frame, sense, phase, t, total, walking, push, view, proj,
     f_badge = _font(int(20 * s), bold=True)
 
     if minimal:
+        if trails is not None:
+            trails.draw(d, view, proj, w, h, scale=s)
         d.text((34 * s, 30 * s), phase["title"], font=f_title, fill=FG)
         d.text((34 * s, 68 * s),
                fit_text(d, phase["blurb"], f_small, w - 68 * s),
@@ -300,9 +366,11 @@ def main():
     bg = (np.array(BACKGROUND) * 255).astype(np.uint8)
 
     ctrl = pusher = None
+    trails = Trails(rid)
 
     def reset():
         nonlocal ctrl, pusher
+        trails.clear()
         p.resetBasePositionAndOrientation(rid, [0, 0, 0.31],
                                           p.getQuaternionFromEuler([0, 0, 0]))
         p.resetBaseVelocity(rid, [0, 0, 0], [0, 0, 0])
@@ -357,9 +425,11 @@ def main():
             if sense["com"][2] < 0.13:
                 print(f"    {ph['name']:9s} fell -- resetting")
                 reset()
+                trails.clear()
                 if ph["walk"]:
                     ctrl.start_walking()
 
+            trails.sample()
             com = robot.get_com_position()
             yaw += 0.06
             view = p.computeViewMatrixFromYawPitchRoll(
@@ -375,7 +445,8 @@ def main():
             walking = ctrl.enable_walk
             rgb = draw_hud(rgb, sense, ph, frame_i / FPS, args.seconds,
                            walking, push if (push and push[0] < 0.9) else None,
-                           view, proj, robot, W, H, minimal=not args.hud)
+                           view, proj, robot, W, H, minimal=not args.hud,
+                           trails=trails)
             rec.add(rgb)
             frame_i += 1
             if frame_i % 60 == 0:
